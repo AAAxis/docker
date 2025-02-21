@@ -1,0 +1,21 @@
+services:
+  deepseek:
+    build: ./deepseek  # Path to the folder containing the Dockerfile
+    ports:
+      - "8080:8080"  # Expose port 8080 for the Ollama API
+    volumes:
+      - deepseek_data:/app/data  # Persistent storage for Ollama data
+    environment:
+      - OLLAMA_HOST=0.0.0.0  # Allow external access to Ollama
+
+  backend:
+    build: ./backend
+    ports:
+      - "5001:5001"
+    depends_on:
+      - deepseek  # Ensure Deepseek starts first
+    environment:
+      DEEPSEEK_API_URL: "http://deepseek:8080/api"  # URL to access Deepseek
+
+volumes:
+  deepseek_data:  # Define a volume for persistent data
