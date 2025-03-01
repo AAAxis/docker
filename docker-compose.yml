@@ -1,21 +1,42 @@
+
 services:
-  deepseek:
-    build: ./deepseek  # Path to the folder containing the Dockerfile
-    ports:
-      - "8080:8080"  # Expose port 8080 for the Ollama API
+  ollama:
+    image: ollama/ollama
     volumes:
-      - deepseek_data:/app/data  # Persistent storage for Ollama data
-    environment:
-      - OLLAMA_HOST=0.0.0.0  # Allow external access to Ollama
+      - ./ollama-models:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - my_custom_network
 
   backend:
-    build: ./backend
+    image: polskoydm/docker-backend:latest
     ports:
       - "5001:5001"
     depends_on:
-      - deepseek  # Ensure Deepseek starts first
-    environment:
-      DEEPSEEK_API_URL: "http://deepseek:8080/api"  # URL to access Deepseek
+      - ollama
+    networks:
+      - my_custom_network
 
-volumes:
-  deepseek_data:  # Define a volume for persistent data
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    restart: always
+    networks:
+      - my_custom_network
+    environment:
+      OLLAMA_BASE_URL: "http://127.0.0.1:11434"
+
+    ports:
+      - "5002:5002"  # Open WebUI will be accessible on port 5002
+
+networks:
+  my_custom_network:
+
+
+
