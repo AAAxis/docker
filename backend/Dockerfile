@@ -7,17 +7,19 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip and install dependencies with verbose output
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -v -r requirements.txt && \
+    pip list
 
 # Copy the rest of the application code
 COPY . .
 
-# Expose port 5001 for the Flask app
-EXPOSE 5001
+# Expose port 1488 for the Flask app
+EXPOSE 1488
 
-# Define environment variable
-ENV FLASK_APP=run.py
+# Set Python path to include the current directory
+ENV PYTHONPATH=/app
 
 # Run the Flask application
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5001"]
+CMD ["python", "run.py"]

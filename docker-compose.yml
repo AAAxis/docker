@@ -1,42 +1,18 @@
-
 services:
-  ollama:
-    image: ollama/ollama
+
+
+  grow-backend:
+    build:
+      context: ./grow-backend  
+    ports:
+      - "1488:1488"
     volumes:
-      - ./ollama-models:/root/.ollama
-    ports:
-      - "11434:11434"
+      - ./uploads:/app/uploads
     networks:
       - my_custom_network
 
-  backend:
-    image: polskoydm/docker-backend:latest
-    ports:
-      - "5001:5001"
-    depends_on:
-      - ollama
-    networks:
-      - my_custom_network
-
-  redis:
-    image: redis:latest
-    restart: always
-    ports:
-      - "6379:6379"
-
-  open-webui:
-    image: ghcr.io/open-webui/open-webui:main
-    restart: always
-    networks:
-      - my_custom_network
-    environment:
-      OLLAMA_BASE_URL: "http://127.0.0.1:11434"
-
-    ports:
-      - "5002:5002"  # Open WebUI will be accessible on port 5002
 
 networks:
   my_custom_network:
-
 
 
