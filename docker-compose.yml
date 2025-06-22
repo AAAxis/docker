@@ -1,18 +1,97 @@
 services:
-
-
-  grow-backend:
+  backend:
     build:
-      context: ./grow-backend  
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "1488:1488"
+      - "5000:5000"
     volumes:
       - ./uploads:/app/uploads
     networks:
       - my_custom_network
 
+  mailserver:
+    image: docker.io/mailserver/docker-mailserver:latest
+    container_name: mailserver
+    hostname: mail.theholylabs.com
+    env_file: mailserver.env
+    ports:
+      - "25:25"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+    volumes:
+      - ./docker-data/dms/mail-data/:/var/mail/
+      - ./docker-data/dms/mail-state/:/var/mail-state/
+      - ./docker-data/dms/mail-logs/:/var/log/mail/
+      - ./docker-data/dms/config/:/tmp/docker-mailserver/
+      - ./docker-data/dms/config/opendkim/keys/:/etc/opendkim/keys/
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    restart: always
+    stop_grace_period: 1m
+    cap_add:
+      - NET_ADMIN
+    healthcheck:
+      test: "ss -lntp | grep -E ':25|:143|:465|:587|:993' || exit 1"
+      timeout: 45s
+      interval: 30s
+      retries: 3
+    networks:
+      - my_custom_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    restart: unless-stopped
+    depends_on:
+      - webmail
+      - backend
+    networks:
+      - my_custom_network
+
+  webmail:
+    image: hardware/rainloop
+    container_name: webmail
+    ports:
+      - "8080:8888"
+    volumes:
+      - webmail_data:/rainloop/data
+    restart: unless-stopped
+    networks:
+      - my_custom_network
+
+  ipsec-vpn:
+    image: hwdsl2/ipsec-vpn-server
+    container_name: ipsec-vpn
+    environment:
+      - VPN_IPSEC_PSK=ipsec-vpn-key
+      - VPN_USER=dima
+      - VPN_PASSWORD=rabbit
+    ports:
+      - "500:500/udp"
+      - "4500:4500/udp"
+    volumes:
+      - /lib/modules:/lib/modules:ro
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/ppp
+    sysctls:
+      - net.ipv4.ip_forward=1
+    restart: unless-stopped
+    networks:
+      - my_custom_network
+
+volumes:
+  webmail_data:
 
 networks:
   my_custom_network:
-
-
