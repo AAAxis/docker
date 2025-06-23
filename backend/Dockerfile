@@ -15,8 +15,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy the rest of the application code
 COPY . .
 
-# Expose port 1488 for the Flask app
-EXPOSE 1488
+# Expose port 5000 for the Flask app
+EXPOSE 5000
 
 # Set Python path to include the current directory
 ENV PYTHONPATH=/app

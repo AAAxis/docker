@@ -17,6 +17,7 @@ from flask_cors import CORS
 import stripe
 import os
 import random
+import re
 from flask import Flask, render_template, request, jsonify
 from flask_mail import Mail, Message
 
@@ -26,7 +27,7 @@ from flask_mail import Mail, Message
 load_dotenv()
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 # Configure CORS
 # Make sure this is exactly as shown
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -108,41 +109,7 @@ def upload_file():
         app.logger.error(f"Error saving file: {str(e)}")
         return jsonify({"error": "File upload failed"}), 500
 
-    # Construct the file URL
-    file_url = f"https://api.theholylabs.com/uploads/{filename}"
-    
-    return jsonify({
-        "message": "File uploaded successfully",
-        "file_url": file_url
-    }), 200
-
-
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_file():
-    app.logger.info("Received file upload request")
-    
-    if 'file' not in request.files:
-        app.logger.error("No file part in request")
-        return jsonify({"error": "No file part"}), 400
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        app.logger.error("No selected file")
-        return jsonify({"error": "No selected file"}), 400
-
-    # Secure the filename and save the file
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
-    try:
-        file.save(filepath)
-        app.logger.info(f"File saved at {filepath}")
-    except Exception as e:
-        app.logger.error(f"Error saving file: {str(e)}")
-        return jsonify({"error": "File upload failed"}), 500
-
-    # Construct the file URL
+    # Construct the file URL for production
     file_url = f"https://api.theholylabs.com/uploads/{filename}"
     
     return jsonify({
@@ -159,7 +126,32 @@ def uploaded_file(filename):
 # Keep root endpoint for browser visits
 @app.route('/', methods=['GET'])
 def root():
-    return jsonify({"status": "API Proxy running"}), 200
+    return render_template('index.html')
+
+# Web interface routes
+@app.route('/upload-interface', methods=['GET'])
+def upload_interface():
+    return render_template('upload_interface.html')
+
+@app.route('/resume-interface', methods=['GET'])
+def resume_interface():
+    return render_template('resume_interface.html')
+
+@app.route('/contact-interface', methods=['GET'])
+def contact_interface():
+    return render_template('contact_interface.html')
+
+@app.route('/auth-interface', methods=['GET'])
+def auth_interface():
+    return render_template('auth_interface.html')
+
+@app.route('/api-docs', methods=['GET'])
+def api_docs():
+    return render_template('api_docs.html')
+
+@app.route('/payment-interface', methods=['GET'])
+def payment_interface():
+    return render_template('payment_interface.html')
 
 
 @app.route('/resume', methods=['GET', 'POST'])
@@ -216,7 +208,7 @@ def upload_resume():
         app.logger.error(f"Error sending file to Telegram: {str(e)}")
         return jsonify({"error": "Error sending file to Telegram"}), 500
 
-    # Construct the file URL
+    # Construct the file URL for production
     file_url = f"https://api.theholylabs.com/uploads/{filename}"
     
     return jsonify({
@@ -389,8 +381,8 @@ def parsing():
     except Exception as e:
         return jsonify({"error": f"Failed to parse file: {str(e)}"}), 500
 
-    # Construct the file URL
-    file_url = f"http://93.127.130.43:5001/uploads/{filename}"
+    # Construct the file URL for production
+    file_url = f"https://api.theholylabs.com/uploads/{filename}"
     
     return jsonify({
         "message": "File uploaded and parsed successfully",
@@ -477,5 +469,5 @@ def send_telegram_message(text):
 
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 1488))
+    port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
