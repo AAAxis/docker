@@ -7,6 +7,30 @@ services:
       - "5000:5000"
     volumes:
       - ./uploads:/app/uploads
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=theholylabs123
+      - DB_NAME=email_management
+      - DB_PORT=5432
+    depends_on:
+      - postgres
+    networks:
+      - my_custom_network
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_DB: email_management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: theholylabs123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
     networks:
       - my_custom_network
 
@@ -92,6 +116,7 @@ services:
 
 volumes:
   webmail_data:
+  postgres_data:
 
 networks:
   my_custom_network:

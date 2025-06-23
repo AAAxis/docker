@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Configuration - Theholylabs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: black;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: black;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: black;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Email Configuration</h1>
+            <p>Manage your application's email settings</p>
+        </div>
+        
+        <div class="form-container">
+            <div id="alertContainer"></div>
+            
+            <form id="emailConfigForm">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="mail_server">SMTP Server</label>
+                            <input type="text" id="mail_server" name="mail_server" placeholder="smtp.gmail.com" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="mail_port">SMTP Port</label>
+                            <input type="number" id="mail_port" name="mail_port" placeholder="587" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mail_username">Email Address</label>
+                    <input type="email" id="mail_username" name="mail_username" placeholder="your-email@gmail.com" required>
+                    <small style="color: #666; font-size: 0.9em;">This will be used for login and as the sender address</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="mail_password">Email Password / App Password</label>
+                    <input type="password" id="mail_password" name="mail_password" placeholder="Enter password" required>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="mail_use_tls" name="mail_use_tls" checked>
+                                <label for="mail_use_tls">Use TLS</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="mail_use_ssl" name="mail_use_ssl">
+                                <label for="mail_use_ssl">Use SSL</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">💾 Save Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Show alert message
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Load current email configuration
+        async function loadEmailConfig() {
+            try {
+                showAlert('Loading configuration...', 'info');
+                
+                const response = await fetch('/api/email-config');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Populate form fields
+                    document.getElementById('mail_server').value = data.mail_server || '';
+                    document.getElementById('mail_port').value = data.mail_port || 587;
+                    document.getElementById('mail_username').value = data.mail_username || '';
+                    document.getElementById('mail_password').value = ''; // Don't show actual password
+                    document.getElementById('mail_use_tls').checked = data.mail_use_tls;
+                    document.getElementById('mail_use_ssl').checked = data.mail_use_ssl;
+                    
+                    showAlert('Configuration loaded successfully!');
+                } else {
+                    showAlert(data.error || 'Failed to load configuration', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error: ' + error.message, 'error');
+            }
+        }
+
+        // Save email configuration
+        document.getElementById('emailConfigForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(this);
+                const data = {
+                    mail_server: formData.get('mail_server'),
+                    mail_port: parseInt(formData.get('mail_port')),
+                    mail_username: formData.get('mail_username'),
+                    mail_password: formData.get('mail_password'),
+                    mail_default_sender: formData.get('mail_username'), // Auto-set to same as username
+                    mail_use_tls: document.getElementById('mail_use_tls').checked,
+                    mail_use_ssl: document.getElementById('mail_use_ssl').checked
+                };
+                
+                showAlert('Saving configuration...', 'info');
+                
+                const response = await fetch('/api/email-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Email configuration updated successfully! 🎉');
+                    // Clear password field for security
+                    document.getElementById('mail_password').value = '';
+                } else {
+                    showAlert(result.error || 'Failed to update configuration', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error: ' + error.message, 'error');
+            }
+        });
+
+        // Load configuration on page load (only non-sensitive data)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Page loads with empty form for security
+            showAlert('Ready to configure email settings', 'info');
+        });
+    </script>
+</body>
+</html> 

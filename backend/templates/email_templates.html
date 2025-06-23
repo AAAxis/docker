@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Templates Management - Theholylabs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: black;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: black;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        .templates-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .template-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            border-color: black;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+
+
+        .template-header {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .template-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .template-description {
+            color: #6c757d;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .template-subject {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .template-preview {
+            max-height: 150px;
+            overflow: hidden;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            position: relative;
+        }
+
+        .template-preview::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(transparent, #f8f9fa);
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: black;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 200px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .variables-help {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .variables-help h4 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+
+        .variables-help code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .no-templates {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .template-actions {
+                flex-direction: column;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Email Templates Management</h1>
+            <p>Create and manage reusable email templates</p>
+        </div>
+        
+        <div class="content">
+            <div id="alertContainer"></div>
+            
+            <div class="toolbar">
+                <h2>Email Templates</h2>
+                <button class="btn btn-primary" onclick="openModal()">
+                    ➕ Create New Template
+                </button>
+            </div>
+            
+            <div id="templatesContainer" class="templates-grid">
+                <!-- Templates will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div id="templateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create Email Template</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <div class="variables-help">
+                <h4>Available Variables:</h4>
+                <p><strong>Resume Template:</strong> <code>{name}</code>, <code>{email}</code>, <code>{job_title}</code>, <code>{filename}</code>, <code>{date_time}</code></p>
+                <p><strong>Subscription Template:</strong> <code>{name}</code>, <code>{email}</code>, <code>{text}</code></p>
+                <p><strong>Global Auth Template:</strong> <code>{email}</code>, <code>{verification_code}</code>, <code>{date_time}</code></p>
+                <p><strong>Delete Data Template:</strong> <code>{name}</code>, <code>{email}</code>, <code>{reason}</code>, <code>{date_time}</code></p>
+                <p><strong>Custom:</strong> Add your own variables as needed</p>
+            </div>
+            
+            <form id="templateForm">
+                
+                <div class="form-group">
+                    <label for="route_name">Route Name:</label>
+                    <select id="route_name" name="route_name" required>
+                        <option value="">Select a route...</option>
+                    </select>
+                    <input type="text" id="custom_route" name="custom_route" placeholder="Enter custom route name" style="display: none; margin-top: 10px;">
+                </div>
+                
+
+                
+                <div class="form-group">
+                    <label for="subjectTemplate">Email Subject Template:</label>
+                    <input type="text" id="subjectTemplate" name="subjectTemplate" placeholder="e.g., Welcome {name}! Your application received" required>
+                    <small>Use {variable_name} for dynamic content like {name}, {email}, etc.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="htmlTemplate">Email HTML Template:</label>
+                    <textarea id="htmlTemplate" name="htmlTemplate" rows="15" placeholder="Enter your HTML email template here..." required></textarea>
+                    <small>Use {variable_name} for dynamic content. HTML tags are supported.</small>
+                </div>
+                
+                <div class="template-actions">
+                    <button type="submit" class="btn btn-success">💾 Save Template</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let templates = [];
+
+        // Show alert message
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Load templates
+        async function loadTemplates() {
+            try {
+                const response = await fetch('/api/email-templates');
+                if (response.ok) {
+                    templates = await response.json();
+                    displayTemplates(templates);
+                    updateAvailableRoutes();
+                } else {
+                    showAlert('Failed to load templates', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error: ' + error.message, 'error');
+            }
+        }
+
+        // Display templates
+        function displayTemplates(templates) {
+            const templatesContainer = document.getElementById('templatesContainer');
+            
+            if (templates.length === 0) {
+                templatesContainer.innerHTML = '<p class="no-templates">No email templates found. Create your first template to get started!</p>';
+                return;
+            }
+            
+            templatesContainer.innerHTML = '';
+            templates.forEach(template => {
+                const templateCard = document.createElement('div');
+                templateCard.className = 'template-card';
+                templateCard.innerHTML = `
+                    <div class="template-header">
+                        <div class="template-name">${template.route_name}</div>
+                    </div>
+                    <div class="template-subject"><strong>Subject:</strong> ${template.subject_template}</div>
+                    <div class="template-preview">${template.html_template}</div>
+                    <div class="template-actions">
+                        <button class="btn btn-danger btn-small" onclick="deleteTemplate(${template.id}, '${template.route_name}')">Delete</button>
+                    </div>
+                `;
+                templatesContainer.appendChild(templateCard);
+            });
+        }
+
+        // Open modal for creating new template
+        function openModal() {
+            document.getElementById('modalTitle').textContent = 'Create New Email Template';
+            document.getElementById('templateForm').reset();
+            
+            // Hide custom route input
+            document.getElementById('custom_route').style.display = 'none';
+            document.getElementById('custom_route').required = false;
+            
+            // Update available routes
+            updateAvailableRoutes();
+            
+            document.getElementById('templateModal').style.display = 'block';
+        }
+
+
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('templateModal').style.display = 'none';
+        }
+
+        // Delete template
+        async function deleteTemplate(templateId, routeName) {
+            if (!confirm(`Are you sure you want to delete this template? This action cannot be undone. This template is used for the route: ${routeName}`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/email-templates/${templateId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Template deleted successfully!');
+                    loadTemplates();
+                } else {
+                    showAlert(result.error || 'Failed to delete template', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error: ' + error.message, 'error');
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('templateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            let routeName = formData.get('route_name');
+            
+            // Use custom route if 'other' was selected
+            if (routeName === 'other') {
+                routeName = formData.get('custom_route');
+            }
+            
+            const data = {
+                route_name: routeName,
+                subject_template: formData.get('subjectTemplate'),
+                html_template: formData.get('htmlTemplate')
+            };
+            
+            try {
+                showAlert('Creating template...', 'info');
+                
+                const response = await fetch('/api/email-templates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Template created successfully! 🎉');
+                    closeModal();
+                    loadTemplates();
+                } else {
+                    showAlert(result.error || 'Failed to create template', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error: ' + error.message, 'error');
+            }
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('templateModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Load templates on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTemplates();
+        });
+
+        // Handle route selection
+        const routeSelect = document.getElementById('route_name');
+        const customRouteInput = document.getElementById('custom_route');
+        
+        routeSelect.addEventListener('change', function() {
+            if (this.value === 'other') {
+                customRouteInput.style.display = 'block';
+                customRouteInput.required = true;
+            } else {
+                customRouteInput.style.display = 'none';
+                customRouteInput.required = false;
+                customRouteInput.value = '';
+            }
+        });
+
+        // Update available routes in dropdown
+        function updateAvailableRoutes() {
+            const routeSelect = document.getElementById('route_name');
+            const allRoutes = [
+                { value: 'resume', text: 'Resume Submissions (/resume)' },
+                { value: 'subscribe', text: 'Contact Form (/subscribe)' },
+                { value: 'global_auth', text: 'Authentication (/global_auth)' },
+                { value: 'delete_data', text: 'Data Deletion Requests (/delete-data)' }
+            ];
+            
+            // Get routes that already have templates
+            const usedRoutes = templates.map(t => t.route_name);
+            
+            // Clear current options
+            routeSelect.innerHTML = '<option value="">Select a route...</option>';
+            
+            // Add available routes
+            allRoutes.forEach(route => {
+                if (!usedRoutes.includes(route.value)) {
+                    const option = document.createElement('option');
+                    option.value = route.value;
+                    option.textContent = route.text;
+                    routeSelect.appendChild(option);
+                }
+            });
+            
+            // Always add the custom option
+            const customOption = document.createElement('option');
+            customOption.value = 'other';
+            customOption.textContent = 'Other (Custom Route)';
+            routeSelect.appendChild(customOption);
+        }
+    </script>
+</body>
+</html> 
