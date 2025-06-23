@@ -137,9 +137,7 @@ def upload_interface():
 def resume_interface():
     return render_template('resume_interface.html')
 
-@app.route('/contact-interface', methods=['GET'])
-def contact_interface():
-    return render_template('contact_interface.html')
+
 
 @app.route('/auth-interface', methods=['GET'])
 def auth_interface():
