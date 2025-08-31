@@ -1,0 +1,22 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Users can upload and read their own files
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Public read access for eSIM QR codes
+    match /esim-qr/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        request.auth.token.email == 'admin@example.com';
+    }
+    
+    // Admin can access everything
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null && 
+        request.auth.token.email == 'admin@example.com';
+    }
+  }
+}
