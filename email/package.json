@@ -1,0 +1,39 @@
+{
+  "name": "email-management-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.16",
+    "axios": "^1.6.0",
+    "firebase": "^9.23.0",
+    "lucide-react": "^0.292.0",
+    "next": "14.0.0",
+    "postcss": "^8.4.31",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.47.0",
+    "react-hot-toast": "^2.4.1",
+    "tailwindcss": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/react": "^18.2.25",
+    "@types/react-dom": "^18.2.11",
+    "eslint": "^8.51.0",
+    "eslint-config-next": "14.0.0",
+    "null-loader": "^4.0.1",
+    "typescript": "^5.2.2"
+  },
+  "resolutions": {
+    "undici": "5.28.4"
+  },
+  "overrides": {
+    "undici": "5.28.4"
+  }
+}
