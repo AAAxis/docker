@@ -1,69 +1,52 @@
 services:
-  backend:
+
+  fileserver:
     build:
-      context: ./backend
+      context: ./fileserver
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "3001:3001"
     volumes:
       - ./uploads:/app/uploads
     environment:
-      - DB_HOST=postgres
-      - DB_USER=postgres
-      - DB_PASSWORD=theholylabs123
-      - DB_NAME=email_management
-      - DB_PORT=5432
-    depends_on:
-      - postgres
+      - PORT=3001
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=medical_one
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=kris2kros
+    restart: unless-stopped
     networks:
       - my_custom_network
+    depends_on:
+      - postgres
 
-  postgres:
-    image: postgres:13
-    container_name: postgres
-    environment:
-      POSTGRES_DB: email_management
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: theholylabs123
+  intake-form:
+    build:
+      context: ./intake-form
+      dockerfile: Dockerfile
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - "3000:80"
     restart: unless-stopped
     networks:
       - my_custom_network
 
-  mailserver:
-    image: docker.io/mailserver/docker-mailserver:latest
-    container_name: mailserver
-    hostname: mail.theholylabs.com
-    env_file: mailserver.env
-    ports:
-      - "25:25"
-      - "143:143"
-      - "465:465"
-      - "587:587"
-      - "993:993"
-    volumes:
-      - ./docker-data/dms/mail-data/:/var/mail/
-      - ./docker-data/dms/mail-state/:/var/mail-state/
-      - ./docker-data/dms/mail-logs/:/var/log/mail/
-      - ./docker-data/dms/config/:/tmp/docker-mailserver/
-      - ./docker-data/dms/config/opendkim/keys/:/etc/opendkim/keys/
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    restart: always
-    stop_grace_period: 1m
+  ipsec-vpn:
+    image: hwdsl2/ipsec-vpn-server:latest
+    container_name: ipsec-vpn
+    # Use host networking so UDP 500/4500 are reachable directly
+    network_mode: "host"
+    privileged: true
     cap_add:
       - NET_ADMIN
-    healthcheck:
-      test: "ss -lntp | grep -E ':25|:143|:465|:587|:993' || exit 1"
-      timeout: 45s
-      interval: 30s
-      retries: 3
-    networks:
-      - my_custom_network
+    environment:
+      - VPN_IPSEC_PSK=ipsec-vpn-key
+      - VPN_USER=dima
+      - VPN_PASSWORD=rabbit
+    volumes:
+      - /lib/modules:/lib/modules:ro
+    restart: unless-stopped
+
 
   nginx:
     image: nginx:alpine
@@ -74,49 +57,68 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
-    restart: unless-stopped
+      - ./certbot/www:/var/www/certbot:ro
     depends_on:
-      - webmail
-      - backend
-    networks:
-      - my_custom_network
-
-  webmail:
-    image: hardware/rainloop
-    container_name: webmail
-    ports:
-      - "8080:8888"
-    volumes:
-      - webmail_data:/rainloop/data
+      - fileserver
+      - intake-form
     restart: unless-stopped
     networks:
       - my_custom_network
 
-  ipsec-vpn:
-    image: hwdsl2/ipsec-vpn-server
-    container_name: ipsec-vpn
-    environment:
-      - VPN_IPSEC_PSK=ipsec-vpn-key
-      - VPN_USER=dima
-      - VPN_PASSWORD=rabbit
-    ports:
-      - "500:500/udp"
-      - "4500:4500/udp"
+  certbot:
+    image: certbot/certbot
     volumes:
-      - /lib/modules:/lib/modules:ro
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/ppp
-    sysctls:
-      - net.ipv4.ip_forward=1
+      - ./certbot/www:/var/www/certbot
+      - /etc/letsencrypt:/etc/letsencrypt
+    entrypoint: /bin/sh -c
+    command: >
+      "trap exit TERM; while :; do sleep 1; done"
+    networks:
+      - my_custom_network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=medical_one
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=kris2kros
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - my_custom_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d medical_one"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@medical-one.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
     restart: unless-stopped
     networks:
       - my_custom_network
 
 volumes:
-  webmail_data:
   postgres_data:
+  pgadmin_data:
 
 networks:
   my_custom_network:
