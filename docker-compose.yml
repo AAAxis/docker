@@ -1,122 +1,149 @@
 services:
-  backend:
+
+  api:
+    container_name: api
     build:
-      context: ./backend
+      context: ./api
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
-    volumes:
-      - ./uploads:/app/uploads
     environment:
-      - DB_HOST=postgres
-      - DB_USER=postgres
-      - DB_PASSWORD=theholylabs123
-      - DB_NAME=email_management
-      - DB_PORT=5432
-    depends_on:
-      - postgres
-    networks:
-      - my_custom_network
-
-  postgres:
-    image: postgres:13
-    container_name: postgres
-    environment:
-      POSTGRES_DB: email_management
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: theholylabs123
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - PORT=5000
+      - HOST=0.0.0.0
+      - DEBUG=False
+    env_file:
+      - ./api/.env
     restart: unless-stopped
     networks:
       - my_custom_network
 
-  mailserver:
-    image: docker.io/mailserver/docker-mailserver:latest
-    container_name: mailserver
-    hostname: mail.theholylabs.com
-    env_file: mailserver.env
+  payments:
+    container_name: payments
+    build:
+      context: ./payments
+      dockerfile: Dockerfile
     ports:
-      - "25:25"
-      - "143:143"
-      - "465:465"
-      - "587:587"
-      - "993:993"
-    volumes:
-      - ./docker-data/dms/mail-data/:/var/mail/
-      - ./docker-data/dms/mail-state/:/var/mail-state/
-      - ./docker-data/dms/mail-logs/:/var/log/mail/
-      - ./docker-data/dms/config/:/tmp/docker-mailserver/
-      - ./docker-data/dms/config/opendkim/keys/:/etc/opendkim/keys/
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    restart: always
-    stop_grace_period: 1m
-    cap_add:
-      - NET_ADMIN
-    healthcheck:
-      test: "ss -lntp | grep -E ':25|:143|:465|:587|:993' || exit 1"
-      timeout: 45s
-      interval: 30s
-      retries: 3
+      - "5002:5001"
+    environment:
+      - PORT=5001
+    env_file:
+      - ./payments/.env
+    restart: unless-stopped
+    networks:
+      - my_custom_network
+
+  sandbox:
+    container_name: sandbox
+    build:
+      context: ./sandbox
+      dockerfile: Dockerfile
+    ports:
+      - "5004:5000"
+    environment:
+      - PORT=5000
+      - HOST=0.0.0.0
+      - DEBUG=False
+    env_file:
+      - ./sandbox/.env
+    restart: unless-stopped
+    networks:
+      - my_custom_network
+
+  sdk:
+    container_name: sdk
+    build:
+      context: ./sdk
+      dockerfile: Dockerfile
+    ports:
+      - "5008:5000"
+    environment:
+      - PORT=5000
+      - HOST=0.0.0.0
+      - DEBUG=False
+    env_file:
+      - ./sdk/.env
+    restart: unless-stopped
+    networks:
+      - my_custom_network
+
+  dalle:
+    container_name: dalle
+    build:
+      context: ./dalle
+      dockerfile: Dockerfile
+    ports:
+      - "5006:5000"
+    environment:
+      - PORT=5000
+      - HOST=0.0.0.0
+      - DEBUG=False
+    env_file:
+      - ./dalle/.env
+    restart: unless-stopped
+    networks:
+      - my_custom_network
+
+  data:
+    container_name: data
+    build:
+      context: ./data
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - HOST=0.0.0.0
+      - DEBUG=False
+    env_file:
+      - ./data/.env
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+    restart: unless-stopped
+    networks:
+      - my_custom_network
+
+  topup:
+    container_name: topup
+    build:
+      context: ./topup
+      dockerfile: Dockerfile
+    ports:
+      - "5003:5002"
+    environment:
+      - PORT=5002
+      - HOST=0.0.0.0
+      - DEBUG=False
+    env_file:
+      - ./topup/.env
+    restart: unless-stopped
     networks:
       - my_custom_network
 
   nginx:
-    image: nginx:alpine
     container_name: nginx
+    image: nginx:alpine
+    depends_on:
+      - api
+      - payments
+      - sandbox
+      - sdk
+      - dalle
+      - data
+      - topup
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
-    restart: unless-stopped
-    depends_on:
-      - webmail
-      - backend
-    networks:
-      - my_custom_network
-
-  webmail:
-    image: hardware/rainloop
-    container_name: webmail
-    ports:
-      - "8080:8888"
-    volumes:
-      - webmail_data:/rainloop/data
+      - ./certbot/www:/var/www/certbot:ro
     restart: unless-stopped
     networks:
       - my_custom_network
-
-  ipsec-vpn:
-    image: hwdsl2/ipsec-vpn-server
-    container_name: ipsec-vpn
-    environment:
-      - VPN_IPSEC_PSK=ipsec-vpn-key
-      - VPN_USER=dima
-      - VPN_PASSWORD=rabbit
-    ports:
-      - "500:500/udp"
-      - "4500:4500/udp"
-    volumes:
-      - /lib/modules:/lib/modules:ro
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/ppp
-    sysctls:
-      - net.ipv4.ip_forward=1
-    restart: unless-stopped
-    networks:
-      - my_custom_network
-
-volumes:
-  webmail_data:
-  postgres_data:
+    command: /bin/sh -c "sleep 5 && nginx -g 'daemon off;'"  # wait for backends
 
 networks:
   my_custom_network:
+    driver: bridge

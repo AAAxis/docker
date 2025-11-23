@@ -1,0 +1,9 @@
+docker run --rm \
+  -v $(pwd)/certbot/www:/var/www/certbot \
+  -v /etc/letsencrypt:/etc/letsencrypt \
+  certbot/certbot certonly --webroot \
+  -w /var/www/certbot \
+  -d topup.roamjet.net \
+  --email polskoydm@gmail.com \
+  --agree-tos \
+  --non-interactive
