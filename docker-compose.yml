@@ -11,8 +11,13 @@ services:
       - PORT=5000
       - HOST=0.0.0.0
       - DEBUG=False
+      # Point to mounted credentials file
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/firebase-credentials.json
     env_file:
       - ./api/.env
+    volumes:
+      # Mount Firebase credentials as read-only volume (not copied into image)
+      - ./api/esim-f0e3e-firebase-adminsdk-fbsvc-cc27060e04.json:/app/secrets/firebase-credentials.json:ro
     restart: unless-stopped
     networks:
       - my_custom_network
